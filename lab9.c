@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+
+// Global table size
+#define SIZE 15
 
 // RecordType
 struct RecordType
@@ -11,13 +15,14 @@ struct RecordType
 // Fill out this structure
 struct HashType
 {
-
+	struct RecordType data;
+	struct HashType* next;
 };
 
 // Compute the hash function
 int hash(int x)
 {
-
+	return (x % SIZE);
 }
 
 // parses input file to an integer array
@@ -78,12 +83,23 @@ void displayRecordsInHash(struct HashType *pHashArray, int hashSz)
 	int i;
 
 	for (i=0;i<hashSz;++i)
-	{
-		// if index is occupied with any records, print all
-	}
+    {
+        if (pHashArray[i].data.id != 0)
+        {
+            printf("index %d -> %d, %c, %d", i, pHashArray[i].data.id, pHashArray[i].data.name, pHashArray[i].data.order);
+
+            struct HashType* temp = pHashArray[i].next;
+            while (temp != NULL)
+            {
+                printf(" -> %d, %c, %d", temp->data.id, temp->data.name, temp->data.order);
+                temp = temp->next;
+            }
+            printf("\n");
+        }
+    }
 }
 
-int main(void)
+int main()
 {
 	struct RecordType *pRecords;
 	int recordSz = 0;
@@ -91,4 +107,35 @@ int main(void)
 	recordSz = parseData("input.txt", &pRecords);
 	printRecords(pRecords, recordSz);
 	// Your hash implementation
+
+	struct HashType* myHash = malloc(sizeof(struct HashType)*SIZE);
+
+    // Initialize 
+    for (int i = 0; i < SIZE; i++)
+	{
+		myHash[i].data.id = 0;
+        myHash[i].data.name = '\0';
+		myHash[i].data.order = 0;
+		myHash[i].next = NULL;
+	}
+
+	for (int i=0; i<recordSz; ++i)
+    {
+        int j = hash(pRecords[i].order);
+
+        if (myHash[j].data.id == 0)
+            myHash[j].data = pRecords[i];
+        else
+        {
+            struct HashType* temp = malloc(sizeof(struct HashType));
+            temp->data = pRecords[i];
+            temp->next = myHash[j].next;
+            myHash[j].next = temp;
+        }
+    }
+
+    displayRecordsInHash(myHash, SIZE);
+
+    free(myHash);
+    free(pRecords);
 }
